@@ -1,0 +1,86 @@
+@model ReturnBookViewModel
+
+@{
+    ViewData["Title"] = "Return Book";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Loans</a></li>
+            <li class="breadcrumb-item active">Return Book</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h3 class="mb-0"><i class="bi bi-arrow-return-left text-success me-2"></i>Return Book</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Loan Summary -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="text-muted">Loan Information</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Book</dt>
+                                <dd class="col-sm-7">@Model.BookTitle</dd>
+
+                                <dt class="col-sm-5">Member</dt>
+                                <dd class="col-sm-7">@Model.MemberName</dd>
+
+                                <dt class="col-sm-5">Borrow Date</dt>
+                                <dd class="col-sm-7">@Model.BorrowDate.ToString("yyyy-MM-dd")</dd>
+
+                                <dt class="col-sm-5">Due Date</dt>
+                                <dd class="col-sm-7">@Model.DueDate.ToString("yyyy-MM-dd")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    @if (Model.DaysLate > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>This book is @Model.DaysLate days overdue!</strong>
+                            <p class="mb-0">A fine of <strong>$@Model.FineAmount.ToString("F2")</strong> will be applied.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>No fine applied.</strong> Book is being returned on time.
+                        </div>
+                    }
+
+                    <form asp-action="Return" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="LoanId" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="ReturnDate" class="form-label"></label>
+                            <input asp-for="ReturnDate" class="form-control" type="date" />
+                            <span asp-validation-for="ReturnDate" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg me-2"></i>Confirm Return
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

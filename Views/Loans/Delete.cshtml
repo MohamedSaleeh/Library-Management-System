@@ -1,0 +1,98 @@
+@model Loan
+
+@{
+    ViewData["Title"] = "Delete Loan";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Loans</a></li>
+            <li class="breadcrumb-item active">Delete</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Are you sure you want to delete this loan? This action cannot be undone.
+                        @if (!Model.ReturnDate.HasValue && Model.Book != null)
+                        {
+                            <br />
+                            <strong>The book quantity will be restored.</strong>
+                        }
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Loan ID</dt>
+                        <dd class="col-sm-8">#@Model.Id</dd>
+
+                        <dt class="col-sm-4">Book</dt>
+                        <dd class="col-sm-8">@(Model.Book?.Title ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Member</dt>
+                        <dd class="col-sm-8">@(Model.Member?.FullName ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Borrow Date</dt>
+                        <dd class="col-sm-8">@Model.BorrowDate.ToString("yyyy-MM-dd")</dd>
+
+                        <dt class="col-sm-4">Due Date</dt>
+                        <dd class="col-sm-8">@Model.DueDate.ToString("yyyy-MM-dd")</dd>
+
+                        <dt class="col-sm-4">Return Date</dt>
+                        <dd class="col-sm-8">@(Model.ReturnDate?.ToString("yyyy-MM-dd") ?? "Not returned")</dd>
+
+                        <dt class="col-sm-4">Fine Amount</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.FineAmount > 0)
+                            {
+                                <span class="text-danger fw-bold">$@Model.FineAmount.ToString("F2")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @GetStatusBadge(Model.Status)">@Model.Status</span>
+                        </dd>
+                    </dl>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Delete Loan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-info",
+            "Returned" => "bg-success",
+            "Overdue" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

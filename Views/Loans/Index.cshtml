@@ -1,0 +1,139 @@
+@model IEnumerable<Loan>
+
+@{
+    ViewData["Title"] = "Loans";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-arrow-left-right text-primary me-2"></i>Loans
+            </h1>
+            <p class="text-muted">Manage book loans and returns</p>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>New Loan
+            </a>
+        }
+    </div>
+
+    <!-- Status Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="Index" class="btn @(ViewBag.CurrentStatus == null ? "btn-primary" : "btn-outline-primary")">
+                    <i class="bi bi-list me-1"></i>All
+                </a>
+                <a asp-action="Index" asp-route-status="Active" class="btn @(ViewBag.CurrentStatus == "Active" ? "btn-info text-white" : "btn-outline-info")">
+                    <i class="bi bi-circle-fill me-1"></i>Active
+                </a>
+                <a asp-action="Index" asp-route-status="Returned" class="btn @(ViewBag.CurrentStatus == "Returned" ? "btn-success" : "btn-outline-success")">
+                    <i class="bi bi-check-circle-fill me-1"></i>Returned
+                </a>
+                <a asp-action="Index" asp-route-status="Overdue" class="btn @(ViewBag.CurrentStatus == "Overdue" ? "btn-danger" : "btn-outline-danger")">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Overdue
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loans Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Book</th>
+                            <th>Member</th>
+                            <th>Borrow Date</th>
+                            <th>Due Date</th>
+                            <th>Return Date</th>
+                            <th>Fine</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model)
+                        {
+                            <tr class="@GetRowClass(loan.Status)">
+                                <td><i class="bi bi-book text-muted me-1"></i>@(loan.Book?.Title ?? "N/A")</td>
+                                <td><i class="bi bi-person text-muted me-1"></i>@(loan.Member?.FullName ?? "N/A")</td>
+                                <td>@loan.BorrowDate.ToString("yyyy-MM-dd")</td>
+                                <td>@loan.DueDate.ToString("yyyy-MM-dd")</td>
+                                <td>@(loan.ReturnDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>
+                                    @if (loan.FineAmount > 0)
+                                    {
+                                        <span class="text-danger fw-bold">$@loan.FineAmount.ToString("F2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @GetStatusBadge(loan.Status)">@loan.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@loan.Id" class="btn btn-sm btn-outline-info" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        @if (!loan.ReturnDate.HasValue)
+                                        {
+                                            <a asp-action="Return" asp-route-id="@loan.Id" class="btn btn-sm btn-outline-success ms-1" title="Return Book">
+                                                <i class="bi bi-arrow-return-left"></i>
+                                            </a>
+                                        }
+                                        <a asp-action="Edit" asp-route-id="@loan.Id" class="btn btn-sm btn-outline-primary ms-1" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@loan.Id" class="btn btn-sm btn-outline-danger ms-1" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">No loans found.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-info",
+            "Returned" => "bg-success",
+            "Overdue" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetRowClass(string status)
+    {
+        return status switch
+        {
+            "Overdue" => "table-danger",
+            "Returned" => "table-success",
+            _ => ""
+        };
+    }
+}

@@ -1,0 +1,124 @@
+@model Loan
+
+@{
+    ViewData["Title"] = $"Loan #{Model.Id}";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Loans</a></li>
+            <li class="breadcrumb-item active">Loan #@Model.Id</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="bi bi-arrow-left-right text-primary me-2"></i>Loan #@Model.Id</h3>
+                    <span class="badge @GetStatusBadge(Model.Status) fs-6">@Model.Status</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-3">Book Information</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Title</dt>
+                                <dd class="col-sm-8">@(Model.Book?.Title ?? "N/A")</dd>
+                                <dt class="col-sm-4">Author</dt>
+                                <dd class="col-sm-8">@(Model.Book?.Author ?? "N/A")</dd>
+                                <dt class="col-sm-4">ISBN</dt>
+                                <dd class="col-sm-8"><code>@(Model.Book?.ISBN ?? "N/A")</code></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-3">Member Information</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Name</dt>
+                                <dd class="col-sm-8">@(Model.Member?.FullName ?? "N/A")</dd>
+                                <dt class="col-sm-4">Email</dt>
+                                <dd class="col-sm-8">@(Model.Member?.Email ?? "N/A")</dd>
+                                <dt class="col-sm-4">Phone</dt>
+                                <dd class="col-sm-8">@(Model.Member?.PhoneNumber ?? "N/A")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h5 class="text-muted mb-3">Loan Details</h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Borrow Date</dt>
+                        <dd class="col-sm-3">@Model.BorrowDate.ToString("yyyy-MM-dd")</dd>
+
+                        <dt class="col-sm-3">Due Date</dt>
+                        <dd class="col-sm-3">
+                            @Model.DueDate.ToString("yyyy-MM-dd")
+                            @if (Model.Status == LoanStatus.Overdue)
+                            {
+                                <span class="badge bg-danger ms-1">Overdue</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Return Date</dt>
+                        <dd class="col-sm-3">@(Model.ReturnDate?.ToString("yyyy-MM-dd") ?? "Not returned")</dd>
+
+                        <dt class="col-sm-3">Fine Amount</dt>
+                        <dd class="col-sm-3">
+                            @if (Model.FineAmount > 0)
+                            {
+                                <span class="text-danger fw-bold fs-5">$@Model.FineAmount.ToString("F2")</span>
+                            }
+                            else
+                            {
+                                <span class="text-success">No fine</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    @if (Model.Status == LoanStatus.Overdue)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            This loan is <strong>@((DateTime.Now - Model.DueDate).Days) days</strong> overdue.
+                            Fine accumulates at <strong>$1.00 per day</strong>.
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    <div>
+                        @if (!Model.ReturnDate.HasValue && User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Return" asp-route-id="@Model.Id" class="btn btn-success">
+                                <i class="bi bi-arrow-return-left me-2"></i>Return Book
+                            </a>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary ms-2">
+                                <i class="bi bi-pencil me-2"></i>Edit
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-info",
+            "Returned" => "bg-success",
+            "Overdue" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

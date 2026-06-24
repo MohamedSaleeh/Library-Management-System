@@ -1,0 +1,121 @@
+@model IEnumerable<Book>
+
+@{
+    ViewData["Title"] = "Books";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-book text-primary me-2"></i>Books
+            </h1>
+            <p class="text-muted">Manage your library book collection</p>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>Add Book
+            </a>
+        }
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Search by title, author, or ISBN..." value="@ViewBag.CurrentSearch" />
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="category" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in ViewBag.Categories ?? new List<string>())
+                        {
+                            <option value="@cat" selected="@(ViewBag.CurrentCategory == cat ? "selected" : null)">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Books Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Category</th>
+                            <th>Year</th>
+                            <th class="text-center">Available</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var book in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <i class="bi bi-book text-primary me-2"></i>
+                                    <strong>@book.Title</strong>
+                                </td>
+                                <td>@book.Author</td>
+                                <td><code>@book.ISBN</code></td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(book.Category))
+                                    {
+                                        <span class="badge bg-secondary">@book.Category</span>
+                                    }
+                                </td>
+                                <td>@book.PublishedYear</td>
+                                <td class="text-center">
+                                    @if (book.QuantityAvailable > 0)
+                                    {
+                                        <span class="badge bg-success">@book.QuantityAvailable</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-sm btn-outline-info" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-sm btn-outline-primary ms-1" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@book.Id" class="btn btn-sm btn-outline-danger ms-1" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">No books found.</p>
+            </div>
+        }
+    </div>
+</div>
